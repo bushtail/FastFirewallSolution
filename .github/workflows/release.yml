@@ -1,4 +1,4 @@
-﻿name: Slightly Less Clanker Build
+﻿name: Even Less Clanker Build
 
 on:
   push:
@@ -16,16 +16,16 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: Restore NuGet
-        run: nuget restore YourSolution.sln
+        run: nuget restore FastFirewallSolution.sln
 
       - name: Build
-        run: msbuild YourSolution.sln /p:Configuration=Release
+        run: msbuild FastFirewallSolution.sln /p:Configuration=Release
 
       - name: Locate EXE
         id: find_exe
         shell: pwsh
         run: |
-          $exe = Get-ChildItem -Recurse -Filter YourApp.exe |
+          $exe = Get-ChildItem -Recurse -Filter "${{ github.event.repository.name }}.exe" |
                  Where-Object { $_.FullName -like "*bin\Release*" } |
                  Select-Object -First 1
 
@@ -43,6 +43,12 @@ jobs:
           if (-not $version) { throw "Version not found" }
 
           echo "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: VirusTotal Scan
+        uses: crazy-max/ghaction-virustotal@v4
+        with:
+          vt_api_key: ${{ secrets.VT_API_KEY }}
+          files: ${{ steps.find_exe.outputs.path }}
 
       - name: Create or Update Release
         env:

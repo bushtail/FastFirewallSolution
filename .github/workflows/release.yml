@@ -59,7 +59,9 @@ jobs:
         run: |
           $tag = "v${{ steps.version.outputs.version }}"
           $exe = "${{ steps.find_exe.outputs.path }}"
-          $notes = "${{ steps.vt.outputs.analysis }}"
+                    $vtRaw = "${{ steps.vt.outputs.analysis }}"
+          $vtLink = $vtRaw -replace '^[^=]+=', ''
+          $notes = "$vtLink"
 
           $exists = gh release view $tag 2>$null
 

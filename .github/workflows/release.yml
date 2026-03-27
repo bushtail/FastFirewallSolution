@@ -1,0 +1,73 @@
+﻿name: Clanker Build
+
+on:
+  push:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Restore NuGet
+        run: nuget restore
+
+      - name: Build
+        run: msbuild YourSolution.sln /p:Configuration=Release
+
+      - name: Locate EXE
+        id: find_exe
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Recurse -Filter YourApp.exe |
+                 Where-Object { $_.FullName -like "*bin\Release*" } |
+                 Select-Object -First 1
+
+          if (-not $exe) { throw "EXE not found" }
+
+          echo "path=$($exe.FullName)" >> $env:GITHUB_OUTPUT
+
+      - name: Extract Version
+        id: version
+        shell: pwsh
+        run: |
+          $exePath = "${{ steps.find_exe.outputs.path }}"
+          $version = (Get-Item $exePath).VersionInfo.ProductVersion
+
+          if (-not $version) { throw "Version not found" }
+
+          echo "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Install GitHub CLI
+        uses: cli/cli@v3
+
+      - name: Create or Update Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          $tag = "v${{ steps.version.outputs.version }}"
+          $exe = "${{ steps.find_exe.outputs.path }}"
+
+          # Check if release exists
+          $exists = gh release view $tag 2>$null
+
+          if ($LASTEXITCODE -eq 0) {
+            echo "Release exists, updating..."
+
+            # Upload and overwrite asset
+            gh release upload $tag $exe --clobber
+          }
+          else {
+            echo "Creating new release..."
+
+            gh release create $tag $exe `
+              --title "Release $tag" `
+              --notes "Auto-generated from CI"
+          }

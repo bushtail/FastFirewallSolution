@@ -1,6 +1,6 @@
 namespace FastFirewallSolution
 {
-    partial class Form1
+    partial class MainForm
     {
         /// <summary>
         /// Required designer variable.
@@ -81,7 +81,7 @@ namespace FastFirewallSolution
             this.Controls.Add(this.RemoveButton);
             this.Controls.Add(this.AddButton);
             this.Controls.Add(this.HelpLabel);
-            this.Name = "Form1";
+            this.Name = "MainForm";
             this.Text = "bushtail\'s Fast Firewall Solution";
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.ResumeLayout(false);

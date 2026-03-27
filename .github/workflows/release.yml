@@ -45,6 +45,7 @@ jobs:
           echo "version=$version" >> $env:GITHUB_OUTPUT
 
       - name: VirusTotal Scan
+        id: vt
         uses: crazy-max/ghaction-virustotal@v4
         with:
           vt_api_key: ${{ secrets.VT_API_KEY }}
@@ -68,5 +69,5 @@ jobs:
             echo "Creating new release..."
             gh release create $tag $exe `
               --title "Release $tag" `
-              --notes "Auto-generated from CI"
+              --notes "${{ steps.vt.outputs.analysis }}"
           }

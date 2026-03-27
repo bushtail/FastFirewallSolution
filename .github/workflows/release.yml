@@ -1,8 +1,8 @@
-﻿name: Even Less Clanker Build
+﻿name: A Bit Less Clanker Build
 
 on:
   push:
-    branches: [ "main", "master", "mainline" ]
+    branches: [ "main", "master" ]
 
 jobs:
   build:
@@ -37,8 +37,8 @@ jobs:
         id: version
         shell: pwsh
         run: |
-          $exePath = "${{ steps.find_exe.outputs.path }}"
-          $version = (Get-Item $exePath).VersionInfo.ProductVersion
+          $csproj = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1
+          $version = ([xml](Get-Content $csproj)).Project.PropertyGroup.Version
 
           if (-not $version) { throw "Version not found" }
 
@@ -58,16 +58,18 @@ jobs:
         run: |
           $tag = "v${{ steps.version.outputs.version }}"
           $exe = "${{ steps.find_exe.outputs.path }}"
+          $notes = "${{ steps.vt.outputs.analysis }}"
 
           $exists = gh release view $tag 2>$null
 
           if ($LASTEXITCODE -eq 0) {
             echo "Release exists, updating..."
             gh release upload $tag $exe --clobber
+            gh release edit $tag --notes $notes
           }
           else {
             echo "Creating new release..."
             gh release create $tag $exe `
               --title "Release $tag" `
-              --notes "${{ steps.vt.outputs.analysis }}"
+              --notes $notes
           }

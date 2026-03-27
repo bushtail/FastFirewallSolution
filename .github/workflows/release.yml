@@ -38,7 +38,7 @@ jobs:
         shell: pwsh
         run: |
           $csproj = Get-ChildItem -Recurse -Filter "*.csproj" | Select-Object -First 1
-          $version = ([xml](Get-Content $csproj)).Project.PropertyGroup.Version
+          $version = ([xml](Get-Content $csproj)).Project.PropertyGroup.Version.Trim()
 
           if (-not $version) { throw "Version not found" }
 

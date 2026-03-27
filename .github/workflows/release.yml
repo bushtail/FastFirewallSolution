@@ -1,4 +1,4 @@
-﻿name: Clanker Build
+﻿name: Slightly Less Clanker Build
 
 on:
   push:
@@ -16,7 +16,7 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: Restore NuGet
-        run: nuget restore
+        run: nuget restore YourSolution.sln
 
       - name: Build
         run: msbuild YourSolution.sln /p:Configuration=Release
@@ -44,9 +44,6 @@ jobs:
 
           echo "version=$version" >> $env:GITHUB_OUTPUT
 
-      - name: Install GitHub CLI
-        uses: cli/cli@v3
-
       - name: Create or Update Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -55,18 +52,14 @@ jobs:
           $tag = "v${{ steps.version.outputs.version }}"
           $exe = "${{ steps.find_exe.outputs.path }}"
 
-          # Check if release exists
           $exists = gh release view $tag 2>$null
 
           if ($LASTEXITCODE -eq 0) {
             echo "Release exists, updating..."
-
-            # Upload and overwrite asset
             gh release upload $tag $exe --clobber
           }
           else {
             echo "Creating new release..."
-
             gh release create $tag $exe `
               --title "Release $tag" `
               --notes "Auto-generated from CI"
